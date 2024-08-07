@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: 
+  m_GroupName: Default Local Group
+  m_GUID: b0ea7d831bfc3b64dbdadbde377b3f7b
+  m_SerializeEntries:
+  - m_GUID: 5161597794cf2aa4cbe65299e26bff59
+    m_Address: Rock Variant 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Destroyable
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 556a4333eeba7a34bb1eb1c7d72e2710
+    m_Address: Assets/Prefabs/ExtraRange.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Power Up
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7620a238642269142bd00ab768225004
+    m_Address: ExtraBomb
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Power Up
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be87b8fef2151f44f910c700bdedb38c
+    m_Address: BorderRock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Undestroyable
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd16d1d45630b0949852977ab3ffaeb6
+    m_Address: Rock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Destroyable
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 8511ba15888f551409c5b176bb2aa216, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 314cf5e01cdcc44488b74119e77a961a, type: 2}
+    - {fileID: 11400000, guid: 26b6dbf3998056542b03631042d4f897, type: 2}
