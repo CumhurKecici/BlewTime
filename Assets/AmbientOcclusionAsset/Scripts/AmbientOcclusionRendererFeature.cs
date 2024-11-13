@@ -33,7 +33,8 @@ public class AmbientOcclusionRendererFeature : ScriptableRendererFeature
     // This method is called when setting up the renderer once per-camera.
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        renderer.EnqueuePass(m_renderPass);
+        if (renderingData.cameraData.camera == Camera.main)
+            renderer.EnqueuePass(m_renderPass);
     }
 
     protected override void Dispose(bool disposing)
@@ -279,6 +280,7 @@ public class AmbientOcclusionRendererFeature : ScriptableRendererFeature
                     var pixel = new float3(0);
 
                     float phi = m_blueNoises[0].GetPixel(x, y).a;
+                    //phi = rnd.NextUInt(0, 1); //math.reversebits(rnd.NextUInt());
                     // This rotate the sample per pixels
                     pixel.x = math.cos(phi);
                     pixel.y = math.sin(phi);
