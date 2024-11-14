@@ -7,7 +7,6 @@ public class PlayerController : BombermanUnit
 {
     [SerializeField] private InputActionReference m_movementAction;
     [SerializeField] private InputActionReference m_useBombAction;
-    [SerializeField] private VisualEffect visualEffect;
 
     void Start()
     {
@@ -18,13 +17,6 @@ public class PlayerController : BombermanUnit
 
     void Update()
     {
-
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            if (visualEffect != null)
-                visualEffect.SendEvent("Test");
-        }
-
         if (IsDead)
         {
             MainMenuController.Instance.ShowLoseScreen();

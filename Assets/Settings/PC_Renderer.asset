@@ -1,6 +1,21 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-6477932140224328876
+--- !u!114 &-1262502968270098534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 007e7ff238c35234aa535c72feeb05cf, type: 3}
+  m_Name: ExplosionSimulator
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  m_shader: {fileID: 4800000, guid: 81ead50621b383543a039b63ddf41007, type: 3}
+  m_blurShader: {fileID: -6465566751694194690, guid: 181e51e42764d484b8ff58b9b56f8ab9, type: 3}
+--- !u!114 &-1173153546373041387
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -23,21 +38,6 @@ MonoBehaviour:
     CavityValley: 2.5
     CurvatureRidge: 1
     CurvatureValley: 1
---- !u!114 &-5695844935132298762
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 007e7ff238c35234aa535c72feeb05cf, type: 3}
-  m_Name: ExplosionSimulator
-  m_EditorClassIdentifier: 
-  m_Active: 1
-  m_shader: {fileID: -6465566751694194690, guid: 24833b987bcab6942abcddd726144841, type: 3}
-  m_blurShader: {fileID: -6465566751694194690, guid: 24833b987bcab6942abcddd726144841, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63,9 +63,9 @@ MonoBehaviour:
     probeSamplingDebugTexture: {fileID: 2800000, guid: 24ec0e140fb444a44ab96ee80844e18e, type: 3}
     probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176, type: 3}
   m_RendererFeatures:
-  - {fileID: -6477932140224328876}
-  - {fileID: -5695844935132298762}
-  m_RendererFeatureMap: 54cbd73e0ac319a6f641bb99354bf4b0
+  - {fileID: -1173153546373041387}
+  - {fileID: -1262502968270098534}
+  m_RendererFeatureMap: 15f371b1101fb8ef9a6f62483db07aee
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}

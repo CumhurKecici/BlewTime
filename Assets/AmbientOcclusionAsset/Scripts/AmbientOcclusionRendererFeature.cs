@@ -120,7 +120,7 @@ public class AmbientOcclusionRendererFeature : ScriptableRendererFeature
                 passData.src = resourceData.activeColorTexture;
 
                 //Context item to share data between passes
-                AmbientOcclusionPassContext aoContext = frameData.Create<AmbientOcclusionPassContext>();
+                AmbientOcclusionPassContext aoContext = frameData.GetOrCreate<AmbientOcclusionPassContext>();
 
                 //Creating textures requires for pass
                 aoContext.aoCalculationTexture = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, "_AO_Calculation", true);
