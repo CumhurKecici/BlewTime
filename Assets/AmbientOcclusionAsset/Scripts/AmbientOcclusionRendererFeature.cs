@@ -33,8 +33,7 @@ public class AmbientOcclusionRendererFeature : ScriptableRendererFeature
     // This method is called when setting up the renderer once per-camera.
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        if (renderingData.cameraData.camera == Camera.main)
-            renderer.EnqueuePass(m_renderPass);
+        renderer.EnqueuePass(m_renderPass);
     }
 
     protected override void Dispose(bool disposing)

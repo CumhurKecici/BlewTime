@@ -14,7 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   m_shader: {fileID: 4800000, guid: 81ead50621b383543a039b63ddf41007, type: 3}
-  m_blurShader: {fileID: -6465566751694194690, guid: 181e51e42764d484b8ff58b9b56f8ab9, type: 3}
+  m_settings:
+    Directions: 16
+    Quality: 4
+    Size: 4
 --- !u!114 &-1173153546373041387
 MonoBehaviour:
   m_ObjectHideFlags: 0

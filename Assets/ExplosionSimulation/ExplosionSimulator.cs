@@ -8,6 +8,7 @@ using System.Linq;
 public class ExplosionSimulator : ScriptableRendererFeature
 {
     public Shader m_shader;
+    [SerializeField] private ExplosionSimulatorSettings m_settings = new ExplosionSimulatorSettings();
     private ExplosionSimulatorRenderPass m_explosionSimulator;
     private Material m_material;
 
@@ -19,7 +20,7 @@ public class ExplosionSimulator : ScriptableRendererFeature
         m_material = CoreUtils.CreateEngineMaterial(m_shader);
 
         if (m_explosionSimulator == null)
-            m_explosionSimulator = new ExplosionSimulatorRenderPass(ref m_material);
+            m_explosionSimulator = new ExplosionSimulatorRenderPass(ref m_material, ref m_settings);
 
         // Configures where the render pass should be injected.
         m_explosionSimulator.renderPassEvent = RenderPassEvent.BeforeRenderingOpaques;
@@ -40,10 +41,12 @@ public class ExplosionSimulator : ScriptableRendererFeature
 
     class ExplosionSimulatorRenderPass : ScriptableRenderPass
     {
+        private ExplosionSimulatorSettings m_settings;
         private Material m_material;
 
-        public ExplosionSimulatorRenderPass(ref Material material)
+        public ExplosionSimulatorRenderPass(ref Material material, ref ExplosionSimulatorSettings settings)
         {
+            this.m_settings = settings;
             this.m_material = material;
         }
 
@@ -58,18 +61,15 @@ public class ExplosionSimulator : ScriptableRendererFeature
         class ExplosionSimulatorContext : ContextItem
         {
             internal TextureHandle depthTexture;
+            internal TextureHandle viewNormalsTexture;
             internal TextureHandle blendTexture;
-            internal TextureHandle blendTexture2;
-            internal TextureHandle blendTexture3;
-            internal TextureHandle blendTexture4;
+            internal TextureHandle metaballTexture;
 
             public override void Reset()
             {
                 depthTexture = TextureHandle.nullHandle;
-                blendTexture = TextureHandle.nullHandle;
-                blendTexture2 = TextureHandle.nullHandle;
-                blendTexture3 = TextureHandle.nullHandle;
-                blendTexture4 = TextureHandle.nullHandle;
+                //viewNormalsTexture = TextureHandle.nullHandle;
+                //blendTexture = TextureHandle.nullHandle;
             }
         }
 
@@ -108,16 +108,13 @@ public class ExplosionSimulator : ScriptableRendererFeature
                 passData.rendererListHandle = renderGraph.CreateRendererList(param);
 
                 RenderTextureDescriptor depthDesc = new RenderTextureDescriptor(cameraData.scaledWidth, cameraData.scaledHeight, RenderTextureFormat.Depth, cameraData.cameraTargetDescriptor.depthBufferBits);
-                //RenderTextureDescriptor depthDesc = cameraData.cameraTargetDescriptor;
-                //depthDesc.msaaSamples = 1;
-
 
                 ExplosionSimulatorContext esContext = frameData.Create<ExplosionSimulatorContext>();
                 esContext.depthTexture = UniversalRenderer.CreateRenderGraphTexture(renderGraph, depthDesc, "_SimulationDepthTexture", true);
-                esContext.blendTexture = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, "_SimulationNormalsTexture1", true);
-                esContext.blendTexture2 = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, "_SimulationNormalsTexture2", true);
-                esContext.blendTexture3 = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, "_SimulationNormalsTexture3", true);
-                esContext.blendTexture4 = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, "_SimulationNormalsTexture", true);
+                esContext.viewNormalsTexture = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, "_SimulationViewNormalsTexture", true);
+                esContext.blendTexture = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, "_SimulationNormalsTexture", true);
+                esContext.metaballTexture = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, "_SimulationMetaballTexture", true);
+                //esContext.blendTexture4 = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, "_SimulationNormalsTexture", true);
 
                 builder.UseRendererList(passData.rendererListHandle);
                 builder.SetRenderAttachmentDepth(esContext.depthTexture);
@@ -134,122 +131,44 @@ public class ExplosionSimulator : ScriptableRendererFeature
                 passData.src = esContext.depthTexture;
 
                 builder.UseTexture(esContext.depthTexture);
-                builder.SetRenderAttachment(esContext.blendTexture, 0);
-                builder.SetGlobalTextureAfterPass(esContext.blendTexture, Shader.PropertyToID("_SimulationNormalsTexture1"));
+                builder.SetRenderAttachment(esContext.viewNormalsTexture, 0);
+                builder.SetGlobalTextureAfterPass(esContext.viewNormalsTexture, Shader.PropertyToID("_SimulationViewNormalsTexture"));
 
                 // Assigns the ExecutePass function to the render pass delegate. This will be called by the render graph when executing the pass.
                 builder.SetRenderFunc((ExplosionSimulatorPassData data, RasterGraphContext context) => NormalsPass(data, context));
             }
 
-            using (var builder = renderGraph.AddRasterRenderPass(passName + " - Blend 1", out ExplosionSimulatorPassData passData))
+            using (var builder = renderGraph.AddRasterRenderPass(passName + " - Blend", out ExplosionSimulatorPassData passData))
             {
                 UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
 
                 ExplosionSimulatorContext esContext = frameData.Get<ExplosionSimulatorContext>();
-                passData.src = esContext.blendTexture;
+                passData.src = esContext.viewNormalsTexture;
 
-                builder.UseTexture(esContext.blendTexture);
-                builder.SetRenderAttachment(esContext.blendTexture2, 0);
-                builder.SetGlobalTextureAfterPass(esContext.blendTexture2, Shader.PropertyToID("_SimulationNormalsTexture"));
+                builder.AllowGlobalStateModification(true);
+                builder.UseTexture(esContext.viewNormalsTexture);
+                builder.SetRenderAttachment(esContext.blendTexture, 0);
+                builder.SetGlobalTextureAfterPass(esContext.blendTexture, Shader.PropertyToID("_SimulationNormalsTexture"));
 
                 // Assigns the ExecutePass function to the render pass delegate. This will be called by the render graph when executing the pass.
                 builder.SetRenderFunc((ExplosionSimulatorPassData data, RasterGraphContext context) => BlendPass(data, context));
             }
 
-            /*using (var builder = renderGraph.AddRasterRenderPass(passName + " - Blend 2", out ExplosionSimulatorPassData passData))
+            using (var builder = renderGraph.AddRasterRenderPass(passName + " - Metaball", out ExplosionSimulatorPassData passData))
             {
                 UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
 
                 ExplosionSimulatorContext esContext = frameData.Get<ExplosionSimulatorContext>();
-                passData.src = esContext.blendTexture2;
+                passData.src = esContext.depthTexture;
 
-                builder.UseTexture(esContext.blendTexture2);
-                builder.SetRenderAttachment(esContext.blendTexture3, 0);
-                //builder.SetGlobalTextureAfterPass(esContext.blendTexture3, Shader.PropertyToID("_SimulationNormalsTexture3"));
+                builder.AllowGlobalStateModification(true);
+                builder.UseTexture(esContext.depthTexture);
+                builder.SetRenderAttachment(esContext.metaballTexture, 0);
+                builder.SetGlobalTextureAfterPass(esContext.metaballTexture, Shader.PropertyToID("_SimulationMetaballTexture"));
 
                 // Assigns the ExecutePass function to the render pass delegate. This will be called by the render graph when executing the pass.
-                builder.SetRenderFunc((ExplosionSimulatorPassData data, RasterGraphContext context) => BlendPass(data, context));
+                builder.SetRenderFunc((ExplosionSimulatorPassData data, RasterGraphContext context) => MetaballPass(data, context));
             }
-
-            using (var builder = renderGraph.AddRasterRenderPass(passName + " - Blend 3", out ExplosionSimulatorPassData passData))
-            {
-                UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
-
-                ExplosionSimulatorContext esContext = frameData.Get<ExplosionSimulatorContext>();
-                passData.src = esContext.blendTexture3;
-
-                builder.UseTexture(esContext.blendTexture3);
-                builder.SetRenderAttachment(esContext.blendTexture4, 0);
-                builder.SetGlobalTextureAfterPass(esContext.blendTexture4, Shader.PropertyToID("_SimulationNormalsTexture"));
-
-                // Assigns the ExecutePass function to the render pass delegate. This will be called by the render graph when executing the pass.
-                builder.SetRenderFunc((ExplosionSimulatorPassData data, RasterGraphContext context) => BlendPass(data, context));
-            }*/
-
-            /* using (var builder = renderGraph.AddRasterRenderPass(passName + " - Blend 4", out ExplosionSimulatorPassData passData))
-             {
-                 UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
-
-                 ExplosionSimulatorContext esContext = frameData.Get<ExplosionSimulatorContext>();
-                 passData.src = esContext.blendTexture4;
-
-                 //builder.UseTexture(esContext.depthTexture);
-                 builder.AllowGlobalStateModification(true);
-                 builder.SetRenderAttachment(esContext.blendTexture5, 0);
-                 builder.SetGlobalTextureAfterPass(esContext.blendTexture5, Shader.PropertyToID("_SimulationNormalsTexture5"));
-
-                 // Assigns the ExecutePass function to the render pass delegate. This will be called by the render graph when executing the pass.
-                 builder.SetRenderFunc((ExplosionSimulatorPassData data, RasterGraphContext context) => BlendPass(data, context));
-             }
-
-             using (var builder = renderGraph.AddRasterRenderPass(passName + " - Blend 5", out ExplosionSimulatorPassData passData))
-             {
-                 UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
-
-                 ExplosionSimulatorContext esContext = frameData.Get<ExplosionSimulatorContext>();
-                 passData.src = esContext.blendTexture5;
-
-                 //builder.UseTexture(esContext.depthTexture);
-                 builder.AllowGlobalStateModification(true);
-                 builder.SetRenderAttachment(esContext.blendTexture6, 0);
-                 builder.SetGlobalTextureAfterPass(esContext.blendTexture6, Shader.PropertyToID("_SimulationNormalsTexture6"));
-
-                 // Assigns the ExecutePass function to the render pass delegate. This will be called by the render graph when executing the pass.
-                 builder.SetRenderFunc((ExplosionSimulatorPassData data, RasterGraphContext context) => BlendPass(data, context));
-             }
-
-             using (var builder = renderGraph.AddRasterRenderPass(passName + " - Blend 6", out ExplosionSimulatorPassData passData))
-             {
-                 UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
-
-                 ExplosionSimulatorContext esContext = frameData.Get<ExplosionSimulatorContext>();
-                 passData.src = esContext.blendTexture6;
-
-                 //builder.UseTexture(esContext.depthTexture);
-                 builder.AllowGlobalStateModification(true);
-                 builder.SetRenderAttachment(esContext.blendTexture7, 0);
-                 builder.SetGlobalTextureAfterPass(esContext.blendTexture7, Shader.PropertyToID("_SimulationNormalsTexture7"));
-
-                 // Assigns the ExecutePass function to the render pass delegate. This will be called by the render graph when executing the pass.
-                 builder.SetRenderFunc((ExplosionSimulatorPassData data, RasterGraphContext context) => BlendPass(data, context));
-             }
-
-             using (var builder = renderGraph.AddRasterRenderPass(passName + " - Blend 7", out ExplosionSimulatorPassData passData))
-             {
-                 UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
-
-                 ExplosionSimulatorContext esContext = frameData.Get<ExplosionSimulatorContext>();
-                 passData.src = esContext.blendTexture7;
-
-                 //builder.UseTexture(esContext.depthTexture);
-                 builder.AllowGlobalStateModification(true);
-                 builder.SetRenderAttachment(esContext.blendTexture8, 0);
-                 builder.SetGlobalTextureAfterPass(esContext.blendTexture8, Shader.PropertyToID("_SimulationNormalsTexture8"));
-
-                 // Assigns the ExecutePass function to the render pass delegate. This will be called by the render graph when executing the pass.
-                 builder.SetRenderFunc((ExplosionSimulatorPassData data, RasterGraphContext context) => BlendPass(data, context));
-             }*/
-
         }
 
         // This static method is passed as the RenderFunc delegate to the RenderGraph render pass.
@@ -267,14 +186,15 @@ public class ExplosionSimulator : ScriptableRendererFeature
 
         void BlendPass(ExplosionSimulatorPassData data, RasterGraphContext context)
         {
+            m_material.SetFloat("Directions", (float)m_settings.Directions);
+            m_material.SetFloat("Quality", (float)m_settings.Quality);
+            m_material.SetFloat("Size", m_settings.Size);
             Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), m_material, 1);
         }
 
-        // NOTE: This method is part of the compatibility rendering path, please use the Render Graph API above instead.
-        // Cleanup any allocated resources that were created during the execution of this render pass.
-        public override void OnCameraCleanup(CommandBuffer cmd)
+        void MetaballPass(ExplosionSimulatorPassData data, RasterGraphContext context)
         {
-
+            Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), m_material, 2);
         }
     }
 
